@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Intelligent Inhaler — Doctors Dashboard (Demo)</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg-main: #e6f7f4; /* soft medical background */
+      --bg-accent: linear-gradient(135deg,#e6f7f4 0%, #dff3f0 60%);
+      --panel: #ffffff; /* card surface */
+      --muted: #4b5966;
+      --accent-1: #0bbdac; /* teal */
+      --accent-2: #6574ff; /* indigo */
+      --accent-3: #00c77a; /* green */
+      --danger: #e64b4b;
+      --radius: 12px;
+      --shadow-soft: 0 8px 24px rgba(13,38,52,0.08);
+      --glass-border: rgba(10,20,30,0.04);
+      --max-width: 1280px;
+      --text-dark: #042a2a;
+    }
+
+    /* alternative darker theme */
+    body.dark{ --bg-accent: linear-gradient(135deg,#071a2a 0%, #04202e 60%); --panel: rgba(255,255,255,0.03); --muted:#9fb2c8; --text-dark:#e6f7f4; }
+
+    *{box-sizing:border-box; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}
+    html,body{height:100%;}
+    body{margin:0; background:var(--bg-accent); color:var(--text-dark); padding:28px; display:flex; justify-content:center;}
+
+    .app{width:100%; max-width:var(--max-width); display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start}
+
+    /* SIDEBAR */
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.92)); border:1px solid var(--glass-border); padding:20px; border-radius:16px; box-shadow:var(--shadow-soft); max-height:90vh; overflow:auto}
+    body.dark .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));}
+    .brand{display:flex; gap:12px; align-items:center; margin-bottom:12px}
+    .logo{width:58px;height:58px;border-radius:12px;background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); display:flex; align-items:center; justify-content:center; color:#012; font-weight:900; font-size:18px}
+    .brand h3{margin:0; color:var(--accent-1)}
+    .brand p{margin:0; font-size:13px; color:var(--muted)}
+
+    .nav{margin-top:14px; display:flex; flex-direction:column; gap:8px}
+    .nav button{display:flex; gap:12px; align-items:center; padding:12px; border-radius:10px; border:0; background:transparent; color:var(--text-dark); cursor:pointer; transition:all .15s ease; text-align:left}
+    .nav button:hover{transform:translateX(6px); color:var(--accent-1)}
+    .nav button.active{background:var(--panel); box-shadow:var(--shadow-soft); border:1px solid var(--glass-border)}
+
+    /* MAIN */
+    .main{width:100%; max-height:90vh; overflow:auto; padding-right:8px}
+    .masthead{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px}
+    .title{display:flex; gap:12px; align-items:center}
+    .title h1{margin:0; font-size:20px}
+    .title p{margin:0; font-size:13px; color:var(--muted)}
+
+    .topbar{display:flex; justify-content:space-between; align-items:center; gap:12px}
+    .search{display:flex; gap:12px; align-items:center}
+    .search input{padding:12px 14px; border-radius:10px; border:1px solid var(--glass-border); min-width:300px; background:transparent; color:var(--text-dark); outline:none}
+    .controls{display:flex; gap:10px; align-items:center}
+    .btn{padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:700}
+    .btn.ghost{background:transparent; color:var(--text-dark); border:1px solid var(--glass-border)}
+    .btn.primary{background:linear-gradient(90deg,var(--accent-1), var(--accent-2)); color:#fff}
+
+    /* Dual-tone cards: white surface on gentle tinted background */
+    .cards{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:18px}
+    .card{background:var(--panel); border-radius:12px; padding:14px; border:1px solid var(--glass-border); box-shadow:var(--shadow-soft);}
+    body.dark .card{background:rgba(255,255,255,0.03)}
+    .card .title{font-size:12px; color:var(--muted)}
+    .card .value{font-size:22px; margin-top:8px; font-weight:800; color:var(--text-dark)}
+
+    .panel{background:transparent; margin-top:16px}
+    .table-panel{background:var(--panel); border-radius:12px; padding:16px; border:1px solid var(--glass-border); box-shadow:var(--shadow-soft)}
+    body.dark .table-panel{background:rgba(255,255,255,0.03)}
+
+    table{width:100%; border-collapse:collapse; color:var(--text-dark)}
+    thead th{font-size:12px; text-align:left; padding:14px; color:var(--muted)}
+    tbody td{padding:12px 14px; font-size:14px; border-top:1px solid rgba(0,0,0,0.04)}
+
+    .badge{display:inline-block; padding:6px 10px; border-radius:999px; font-weight:800; font-size:12px}
+    .badge.normal{background:linear-gradient(90deg, rgba(0,199,122,0.12), rgba(0,199,122,0.06)); color:var(--accent-3)}
+    .badge.alert{background:linear-gradient(90deg, rgba(101,116,255,0.12), rgba(101,116,255,0.06)); color:var(--accent-2)}
+    .badge.sos{background:linear-gradient(90deg, rgba(230,75,75,0.12), rgba(230,75,75,0.06)); color:var(--danger)}
+
+    .charts-wrap{display:grid; grid-template-columns: 1fr 360px; gap:14px; margin-top:14px}
+    .chart-card{background:var(--panel); border-radius:12px; padding:16px; border:1px solid var(--glass-border); box-shadow:var(--shadow-soft)}
+
+    /* Modal */
+    .modal-backdrop{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,0.45); z-index:60}
+    .modal-backdrop.show{display:flex}
+    .modal{width:min(760px,94%); background:var(--panel); border-radius:12px; padding:20px; box-shadow:0 30px 80px rgba(2,6,23,0.6); border:1px solid var(--glass-border);}
+    .modal h3{margin:0 0 8px 0}
+    .modal .meta{color:var(--muted); font-size:13px}
+    .modal .desc{margin-top:12px; color:var(--muted); line-height:1.5}
+
+    /* Section highlight animation */
+    .section{scroll-margin-top:24px}
+    .section.highlight{animation:highlightPulse 1s ease-in-out}
+    @keyframes highlightPulse{
+      0%{box-shadow:0 0 0 0 rgba(11,189,172,0)}
+      40%{box-shadow:0 0 0 8px rgba(11,189,172,0.14)}
+      100%{box-shadow:0 0 0 0 rgba(11,189,172,0)}
+    }
+
+    /* sections */
+    .section{display:none}
+    .section.active{display:block}
+
+    footer{text-align:center; margin-top:26px; color:var(--muted); font-size:13px}
+
+    @media (max-width:1100px){.cards{grid-template-columns:repeat(2,1fr);} .app{grid-template-columns:1fr;}}
+    @media (max-width:600px){.search input{min-width:120px}}
+
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Intelligent Inhaler Doctors Dashboard (Demo)">
+
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <div class="logo">IH</div>
+        <div>
+          <h3>Intelligent Inhaler</h3>
+          <p>Doctors Dashboard</p>
+        </div>
+      </div>
+
+      <nav class="nav" role="navigation" id="mainNav">
+        <button data-section="overview" class="active">Overview</button>
+        <button data-section="patients">Patients</button>
+        <button data-section="alerts">Alerts</button>
+        <button data-section="analytics">Analytics</button>
+        <button data-section="settings">Settings</button>
+      </nav>
+
+      <div style="margin-top:18px; font-size:13px; color:var(--muted)">Logged in as <strong style="color:var(--accent-1)">Dr. Smith</strong></div>
+    </aside>
+
+    <main class="main" id="mainContent">
+      <div class="masthead">
+        <div class="title">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="rgba(0,0,0,0.03)"/><path d="M7 12h10" stroke="var(--accent-1)" stroke-width="1.5" stroke-linecap="round"/><path d="M12 7v10" stroke="var(--accent-2)" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div>
+            <h1>Intelligent Inhaler — Doctors Dashboard</h1>
+            <p>Realtime patient inhaler monitoring</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center">
+          <div style="text-align:right"><div style="font-size:12px; color:var(--muted)">Updated</div><div id="lastUpdated" style="font-weight:800; color:var(--text-dark)">--</div></div>
+          <div style="width:56px; height:56px; border-radius:12px; background:linear-gradient(90deg,var(--accent-2),var(--accent-1)); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff">Dr</div>
+        </div>
+      </div>
+
+      <div class="topbar">
+        <div class="search">
+          <input id="search" type="search" placeholder="Search patient or device..." aria-label="Search patients" />
+          <div class="controls">
+            <select id="filterStatus" aria-label="Filter status" style="padding:10px 12px; border-radius:10px; background:transparent; border:1px solid var(--glass-border); color:var(--muted)">
+              <option value="all">All statuses</option>
+              <option value="normal">Normal</option>
+              <option value="alert">Alert</option>
+              <option value="sos">SOS</option>
+            </select>
+            <button id="exportCsv" class="btn ghost">Export</button>
+            <button id="toggleTheme" class="btn ghost">Theme</button>
+            <button id="inviteBtn" class="btn primary">Invite Patient</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center">
+          <button id="quickMsg" class="btn ghost">Quick Message</button>
+          <button id="helpBtn" class="btn ghost">Help</button>
+        </div>
+      </div>
+
+      <!-- OVERVIEW -->
+      <section id="overview" class="section active">
+        <div class="cards" aria-hidden="false">
+          <div class="card">
+            <div class="title">Total Patients</div>
+            <div class="value" id="totalPatients">0</div>
+          </div>
+          <div class="card">
+            <div class="title">Inhaler Uses Today</div>
+            <div class="value" id="usesToday">0</div>
+          </div>
+          <div class="card">
+            <div class="title">Active Alerts</div>
+            <div class="value" id="activeAlerts">0</div>
+          </div>
+          <div class="card">
+            <div class="title">SOS (24h)</div>
+            <div class="value" id="sos24">0</div>
+          </div>
+        </div>
+
+        <section class="panel table-panel" aria-labelledby="patients-heading">
+          <h3 id="patients-heading" style="margin:0 0 12px 0; color:var(--accent-1)">Patient Monitoring</h3>
+          <div style="overflow:auto">
+            <table id="patientTable" role="table" aria-describedby="patients-heading">
+              <thead>
+                <tr>
+                  <th data-key="name">Patient</th>
+                  <th data-key="device">Device ID</th>
+                  <th data-key="usage">Uses</th>
+                  <th data-key="last">Last Updated</th>
+                  <th data-key="status">Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="charts-wrap">
+          <div class="chart-card">
+            <h4 style="margin:0 0 8px 0; color:var(--accent-1)">Weekly Usage</h4>
+            <canvas id="usageChart" height="160" aria-label="Weekly usage"></canvas>
+          </div>
+
+          <div class="chart-card">
+            <h4 style="margin:0 0 8px 0; color:var(--accent-1)">Status Breakdown</h4>
+            <canvas id="statusChart" height="160" aria-label="status breakdown"></canvas>
+            <div style="display:flex; gap:8px; margin-top:12px; align-items:center">
+              <div style="display:flex; gap:8px; align-items:center"><span class="badge normal">Normal</span><div id="countNormal" style="color:var(--muted)">0</div></div>
+              <div style="display:flex; gap:8px; align-items:center"><span class="badge alert">Alert</span><div id="countAlert" style="color:var(--muted)">0</div></div>
+              <div style="display:flex; gap:8px; align-items:center"><span class="badge sos">SOS</span><div id="countSOS" style="color:var(--muted)">0</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PATIENTS -->
+      <section id="patients" class="section">
+        <div class="panel table-panel">
+          <h3 style="color:var(--accent-1)">All Patients</h3>
+          <div style="overflow:auto; margin-top:12px">
+            <table id="allPatientsTable">
+              <thead><tr><th>Name</th><th>Device</th><th>Usage</th><th>Last</th><th>Location</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ALERTS -->
+      <section id="alerts" class="section">
+        <div class="panel table-panel">
+          <h3 style="color:var(--accent-1)">Alerts</h3>
+          <div id="alertsList" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section id="analytics" class="section">
+        <div class="panel table-panel">
+          <h3 style="color:var(--accent-1)">Analytics</h3>
+          <p style="color:var(--muted)">Simple analytics view to demo charts and trends.</p>
+          <div style="margin-top:12px">
+            <canvas id="trendChart" height="120"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="settings" class="section">
+        <div class="panel table-panel">
+          <h3 style="color:var(--accent-1)">Settings</h3>
+          <div style="margin-top:12px; display:flex; gap:12px; flex-direction:column; max-width:480px">
+            <label><input type="checkbox" id="toggleNotifications" checked /> Enable notifications (demo)</label>
+            <label>Theme:
+              <select id="themeSelect"><option value="default">Futuristic</option><option value="light">Light</option><option value="medicos">Medicos</option></select>
+            </label>
+            <label>Demo refresh interval (sec): <input id="refreshHz" type="number" value="5" min="2" style="width:80px" /></label>
+          </div>
+        </div>
+      </section>
+
+      <footer>© 2025 Intelligent Inhaler — Team Innovators</footer>
+    </main>
+  </div>
+
+  <!-- Patient Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" id="patientModal">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+        <h3 id="modalTitle">Patient Name</h3>
+        <div style="display:flex; gap:8px"><button id="closeModal" class="btn ghost">Close</button></div>
+      </div>
+      <div class="meta" id="modalMeta">Device — Status — Last updated</div>
+      <div class="desc" id="modalDesc">Patient description / notes will appear here.</div>
+      <div style="margin-top:12px; display:flex; gap:8px">
+        <button id="ackBtn" class="btn primary">Acknowledge</button>
+        <button id="msgBtn" class="btn ghost">Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- DEMO DATA (local only) ---
+    function makeDemoPatients(){
+      const names = ['John Doe','Sarah Lee','Ramesh Kumar','Asha Patel','Dev Sharma','Neha Rao','Karan Singh','Maya Iyer','Priya Nair','Arjun Mehta'];
+      const cities = ['Delhi','Mumbai','Pune','Bengaluru','Hyderabad','Chennai'];
+      const notes = [
+        'Patient shows regular usage pattern. No irregularities observed.',
+        'Overuse detected in morning hours. Recommend teleconsultation.',
+        'Missed doses observed; follow-up advised.',
+        'Battery low on device — advise patient to charge device.',
+        'SOS triggered once — confirm patient safety and location.',
+        'High variability in inhaler force — consider device check.',
+        'Good adherence. Continue current prescription.',
+        'Seasonal flare-ups reported. Review medication.'
+      ];
+
+      const patients = [];
+      for(let i=0;i<10;i++){
+        const usage = Math.floor(Math.random()*12);
+        const statusRoll = Math.random();
+        let status = 'normal';
+        if(statusRoll > 0.94) status = 'sos';
+        else if(statusRoll > 0.75) status = 'alert';
+        patients.push({
+          id:i+1,
+          name:names[i],
+          device:'INH' + (100 + i),
+          usage,
+          last:new Date(Date.now() - Math.floor(Math.random()*24)*3600*1000).toISOString(),
+          status,
+          location:cities[Math.floor(Math.random()*cities.length)],
+          notes: notes[i % notes.length]
+        });
+      }
+      return patients;
+    }
+
+    let patients = makeDemoPatients();
+
+    // Elements
+    const sections = document.querySelectorAll('.section');
+    const navButtons = document.querySelectorAll('#mainNav button');
+    const tbody = document.querySelector('#patientTable tbody');
+    const allPatientsBody = document.querySelector('#allPatientsTable tbody');
+    const alertsList = document.getElementById('alertsList');
+    const mainContent = document.getElementById('mainContent');
+
+    // Modal elements
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMeta = document.getElementById('modalMeta');
+    const modalDesc = document.getElementById('modalDesc');
+    const closeModal = document.getElementById('closeModal');
+    const ackBtn = document.getElementById('ackBtn');
+    const msgBtn = document.getElementById('msgBtn');
+
+    // Render functions
+    function humanTime(iso){ const d=new Date(iso); return d.toLocaleString(); }
+
+    function renderOverviewTable(list){ tbody.innerHTML=''; list.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td style="font-weight:700; color:var(--text-dark)">${p.name}</td><td>${p.device}</td><td>${p.usage}x</td><td>${humanTime(p.last)}</td><td><span class="badge ${p.status}">${p.status.toUpperCase()}</span></td><td><button class="btn ghost viewBtn" data-id="${p.id}">View</button></td>`; tbody.appendChild(tr); }); attachViewButtons(); }
+
+    function renderAllPatients(list){ allPatientsBody.innerHTML=''; list.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${p.device}</td><td>${p.usage}x</td><td>${humanTime(p.last)}</td><td>${p.location}</td><td><span class="badge ${p.status}">${p.status.toUpperCase()}</span></td>`; allPatientsBody.appendChild(tr); }); }
+
+    function renderAlerts(list){ alertsList.innerHTML=''; const alerts = list.filter(p=>p.status!=='normal'); if(alerts.length===0){ alertsList.innerHTML='<div style="color:var(--muted)">No active alerts</div>'; return; } alerts.forEach(p=>{ const div=document.createElement('div'); div.style.padding='10px'; div.style.borderLeft='4px solid rgba(10,20,30,0.03)'; div.style.marginBottom='8px'; div.innerHTML=`<strong style="color:var(--text-dark)">${p.status.toUpperCase()}</strong> — ${p.name} (${p.device}) at ${p.location} — ${humanTime(p.last)}`; alertsList.appendChild(div); }); }
+
+    function updateStats(){ document.getElementById('totalPatients').textContent = patients.length; document.getElementById('usesToday').textContent = patients.reduce((s,p)=>s+p.usage,0); document.getElementById('activeAlerts').textContent = patients.filter(p=>p.status!=='normal').length; document.getElementById('sos24').textContent = patients.filter(p=>p.status==='sos').length; }
+
+    // Attach view buttons
+    function attachViewButtons(){ document.querySelectorAll('.viewBtn').forEach(b=> b.addEventListener('click', ()=>{ const id=Number(b.dataset.id); openPatientModal(id); })); }
+
+    // Modal logic
+    function openPatientModal(id){ const p = patients.find(x=>x.id===id); if(!p) return; modalTitle.textContent = p.name; modalMeta.textContent = `${p.device} — ${p.status.toUpperCase()} — Last: ${humanTime(p.last)} — Location: ${p.location}`; modalDesc.textContent = p.notes; modalBackdrop.classList.add('show'); modalBackdrop.setAttribute('aria-hidden','false'); // wire buttons
+      ackBtn.onclick = ()=>{ alert('Acknowledged alert for ' + p.name + ' (demo)'); modalBackdrop.classList.remove('show'); };
+      msgBtn.onclick = ()=>{ alert('Message sent to ' + p.name + ' (demo)'); };
+    }
+    closeModal.addEventListener('click', ()=>{ modalBackdrop.classList.remove('show'); modalBackdrop.setAttribute('aria-hidden','true'); });
+    modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop){ modalBackdrop.classList.remove('show'); modalBackdrop.setAttribute('aria-hidden','true'); } });
+
+    // Charts
+    const usageChart = new Chart(document.getElementById('usageChart'), { type:'line', data:{ labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{label:'Avg uses', data:Array.from({length:7},()=>Math.floor(Math.random()*30)+5), borderWidth:2, tension:0.36, pointRadius:4, borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-1') || '#0bbdac', backgroundColor:'rgba(11,189,172,0.08)', fill:true }]}, options:{plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}}, y:{grid:{display:false}}}} });
+
+    const statusCounts = () => { const counts = {normal:0, alert:0, sos:0}; patients.forEach(p=> counts[p.status]++); return counts; };
+    const sc = statusCounts();
+    const statusChart = new Chart(document.getElementById('statusChart'), { type:'doughnut', data:{ labels:['Normal','Alert','SOS'], datasets:[{data:[sc.normal, sc.alert, sc.sos], backgroundColor:['#00c77a','#6574ff','#e64b4b']}]}, options:{plugins:{legend:{position:'bottom', labels:{color:getComputedStyle(document.documentElement).getPropertyValue('--muted') || '#4b5966'}}}}});
+
+    const trendChart = new Chart(document.getElementById('trendChart'), { type:'bar', data:{ labels:['Week1','Week2','Week3','Week4'], datasets:[{label:'Avg inhaler uses', data:[120,150,140,170], backgroundColor:['#0bbdac','#6574ff','#0bbdac','#6574ff']}]}, options:{plugins:{legend:{display:false}}} });
+
+    // Initial render
+    function initialRender(){ renderOverviewTable(patients); renderAllPatients(patients); renderAlerts(patients); updateStats(); const counts=statusCounts(); document.getElementById('countNormal').textContent=counts.normal; document.getElementById('countAlert').textContent=counts.alert; document.getElementById('countSOS').textContent=counts.sos; document.getElementById('lastUpdated').textContent=new Date().toLocaleString(); }
+    initialRender();
+
+    // Navigation + smooth scroll + highlight
+    navButtons.forEach(b=> b.addEventListener('click', ()=>{
+      navButtons.forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const s = b.dataset.section;
+      if(!s) return;
+      sections.forEach(sec=> sec.classList.remove('active'));
+      const target = document.getElementById(s);
+      if(!target) return;
+      target.classList.add('active');
+      // smooth scroll the main content so the section is visible
+      // since main has its own scrollbar, scroll that container
+      target.scrollIntoView({behavior:'smooth', block:'start'});
+      // add temporary highlight to draw attention
+      target.classList.add('highlight');
+      setTimeout(()=> target.classList.remove('highlight'), 1000);
+    }));
+
+    // Theme handling
+    const themeSelect = document.getElementById('themeSelect');
+    const toggleThemeBtn = document.getElementById('toggleTheme');
+
+    function applyTheme(name){ document.body.classList.remove('dark','light','medicos'); if(name==='light'){ document.body.classList.add('light'); } else if(name==='medicos'){ document.body.classList.add('medicos'); } else if(name==='dark'){ document.body.classList.add('dark'); } localStorage.setItem('dashboardTheme', name); }
+
+    // restore theme
+    const savedTheme = localStorage.getItem('dashboardTheme') || 'default'; if(savedTheme!=='default') applyTheme(savedTheme);
+    themeSelect.value = savedTheme==='default' ? 'default' : savedTheme;
+
+    themeSelect.addEventListener('change', ()=>{ const v=themeSelect.value; if(v==='default') applyTheme('default'); else if(v==='light') applyTheme('light'); else if(v==='medicos') applyTheme('medicos'); });
+    toggleThemeBtn.addEventListener('click', ()=>{ const curr = localStorage.getItem('dashboardTheme') || 'default'; if(curr==='default') applyTheme('dark'); else if(curr==='dark') applyTheme('light'); else applyTheme('default'); });
+
+    // Settings inputs
+    document.getElementById('refreshHz').addEventListener('change', ()=>{ clearInterval(window._demoInterval); startDemoInterval(); });
+
+    // Export CSV
+    document.getElementById('exportCsv').addEventListener('click', ()=>{ const rows=[['Patient Name','Device ID','Usage','Last Updated','Status']]; patients.forEach(p=> rows.push([p.name,p.device,p.usage,humanTime(p.last),p.status])); const csv=rows.map(r=> r.map(c=> '"'+String(c).replace(/"/g,'""')+'"').join(',')).join(''); const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='patients_demo.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
+
+    // Quick message & help buttons
+    document.getElementById('quickMsg').addEventListener('click', ()=> alert('Quick message (demo)'));
+    document.getElementById('helpBtn').addEventListener('click', ()=> alert('Help / Guide (demo)'));
+    document.getElementById('inviteBtn').addEventListener('click', ()=> alert('Invite patient (demo)'));
+
+    // Demo live updates
+    function demoTick(){ const idx=Math.floor(Math.random()*patients.length); patients[idx].usage += Math.random()<0.5?1:0; patients[idx].last=new Date().toISOString(); if(Math.random()<0.03) patients[idx].status='sos'; if(Math.random()<0.06 && patients[idx].status==='normal') patients[idx].status='alert'; initialRender(); statusChart.data.datasets[0].data = [statusCounts().normal, statusCounts().alert, statusCounts().sos]; statusChart.update(); }
+    function startDemoInterval(){ const hz = Number(document.getElementById('refreshHz').value) || 5; window._demoInterval = setInterval(demoTick, hz*1000); }
+    startDemoInterval();
+
+  </script>
+</body>
+</html>
