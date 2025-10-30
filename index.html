@@ -10,13 +10,13 @@
 
   <style>
     :root{
-      --bg-main: #e6f7f4; /* soft medical background */
+      --bg-main: #e6f7f4;
       --bg-accent: linear-gradient(135deg,#e6f7f4 0%, #dff3f0 60%);
-      --panel: #ffffff; /* card surface */
+      --panel: #ffffff;
       --muted: #4b5966;
-      --accent-1: #0bbdac; /* teal */
-      --accent-2: #6574ff; /* indigo */
-      --accent-3: #00c77a; /* green */
+      --accent-1: #0bbdac;
+      --accent-2: #6574ff;
+      --accent-3: #00c77a;
       --danger: #e64b4b;
       --radius: 12px;
       --shadow-soft: 0 8px 24px rgba(13,38,52,0.08);
@@ -24,36 +24,26 @@
       --max-width: 1280px;
       --text-dark: #042a2a;
     }
-
-    /* alternative darker theme */
     body.dark{ --bg-accent: linear-gradient(135deg,#071a2a 0%, #04202e 60%); --panel: rgba(255,255,255,0.03); --muted:#9fb2c8; --text-dark:#e6f7f4; }
-
     *{box-sizing:border-box; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}
     html,body{height:100%;}
     body{margin:0; background:var(--bg-accent); color:var(--text-dark); padding:28px; display:flex; justify-content:center;}
-
     .app{width:100%; max-width:var(--max-width); display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start}
-
-    /* SIDEBAR */
     .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.92)); border:1px solid var(--glass-border); padding:20px; border-radius:16px; box-shadow:var(--shadow-soft); max-height:90vh; overflow:auto}
     body.dark .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));}
     .brand{display:flex; gap:12px; align-items:center; margin-bottom:12px}
     .logo{width:58px;height:58px;border-radius:12px;background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); display:flex; align-items:center; justify-content:center; color:#012; font-weight:900; font-size:18px}
     .brand h3{margin:0; color:var(--accent-1)}
     .brand p{margin:0; font-size:13px; color:var(--muted)}
-
     .nav{margin-top:14px; display:flex; flex-direction:column; gap:8px}
     .nav button{display:flex; gap:12px; align-items:center; padding:12px; border-radius:10px; border:0; background:transparent; color:var(--text-dark); cursor:pointer; transition:all .15s ease; text-align:left}
     .nav button:hover{transform:translateX(6px); color:var(--accent-1)}
     .nav button.active{background:var(--panel); box-shadow:var(--shadow-soft); border:1px solid var(--glass-border)}
-
-    /* MAIN */
     .main{width:100%; max-height:90vh; overflow:auto; padding-right:8px}
     .masthead{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px}
     .title{display:flex; gap:12px; align-items:center}
     .title h1{margin:0; font-size:20px}
     .title p{margin:0; font-size:13px; color:var(--muted)}
-
     .topbar{display:flex; justify-content:space-between; align-items:center; gap:12px}
     .search{display:flex; gap:12px; align-items:center}
     .search input{padding:12px 14px; border-radius:10px; border:1px solid var(--glass-border); min-width:300px; background:transparent; color:var(--text-dark); outline:none}
@@ -61,56 +51,37 @@
     .btn{padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:700}
     .btn.ghost{background:transparent; color:var(--text-dark); border:1px solid var(--glass-border)}
     .btn.primary{background:linear-gradient(90deg,var(--accent-1), var(--accent-2)); color:#fff}
-
-    /* Dual-tone cards: white surface on gentle tinted background */
     .cards{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:18px}
     .card{background:var(--panel); border-radius:12px; padding:14px; border:1px solid var(--glass-border); box-shadow:var(--shadow-soft);}
     body.dark .card{background:rgba(255,255,255,0.03)}
     .card .title{font-size:12px; color:var(--muted)}
     .card .value{font-size:22px; margin-top:8px; font-weight:800; color:var(--text-dark)}
-
     .panel{background:transparent; margin-top:16px}
     .table-panel{background:var(--panel); border-radius:12px; padding:16px; border:1px solid var(--glass-border); box-shadow:var(--shadow-soft)}
     body.dark .table-panel{background:rgba(255,255,255,0.03)}
-
     table{width:100%; border-collapse:collapse; color:var(--text-dark)}
     thead th{font-size:12px; text-align:left; padding:14px; color:var(--muted)}
     tbody td{padding:12px 14px; font-size:14px; border-top:1px solid rgba(0,0,0,0.04)}
-
     .badge{display:inline-block; padding:6px 10px; border-radius:999px; font-weight:800; font-size:12px}
     .badge.normal{background:linear-gradient(90deg, rgba(0,199,122,0.12), rgba(0,199,122,0.06)); color:var(--accent-3)}
     .badge.alert{background:linear-gradient(90deg, rgba(101,116,255,0.12), rgba(101,116,255,0.06)); color:var(--accent-2)}
     .badge.sos{background:linear-gradient(90deg, rgba(230,75,75,0.12), rgba(230,75,75,0.06)); color:var(--danger)}
-
-    .charts-wrap{display:grid; grid-template-columns: 1fr 360px; gap:14px; margin-top:14px}
+    .charts-wrap{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:14px}
     .chart-card{background:var(--panel); border-radius:12px; padding:16px; border:1px solid var(--glass-border); box-shadow:var(--shadow-soft)}
-
-    /* Modal */
     .modal-backdrop{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,0.45); z-index:60}
     .modal-backdrop.show{display:flex}
     .modal{width:min(760px,94%); background:var(--panel); border-radius:12px; padding:20px; box-shadow:0 30px 80px rgba(2,6,23,0.6); border:1px solid var(--glass-border);}
     .modal h3{margin:0 0 8px 0}
     .modal .meta{color:var(--muted); font-size:13px}
     .modal .desc{margin-top:12px; color:var(--muted); line-height:1.5}
-
-    /* Section highlight animation */
     .section{scroll-margin-top:24px}
     .section.highlight{animation:highlightPulse 1s ease-in-out}
-    @keyframes highlightPulse{
-      0%{box-shadow:0 0 0 0 rgba(11,189,172,0)}
-      40%{box-shadow:0 0 0 8px rgba(11,189,172,0.14)}
-      100%{box-shadow:0 0 0 0 rgba(11,189,172,0)}
-    }
-
-    /* sections */
+    @keyframes highlightPulse{0%{box-shadow:0 0 0 0 rgba(11,189,172,0)}40%{box-shadow:0 0 0 8px rgba(11,189,172,0.14)}100%{box-shadow:0 0 0 0 rgba(11,189,172,0)}}
     .section{display:none}
     .section.active{display:block}
-
     footer{text-align:center; margin-top:26px; color:var(--muted); font-size:13px}
-
-    @media (max-width:1100px){.cards{grid-template-columns:repeat(2,1fr);} .app{grid-template-columns:1fr;}}
+    @media (max-width:1100px){.cards{grid-template-columns:repeat(2,1fr);} .app{grid-template-columns:1fr;} }
     @media (max-width:600px){.search input{min-width:120px}}
-
   </style>
 </head>
 <body>
@@ -213,6 +184,33 @@
             </table>
           </div>
         </section>
+
+        <!-- SENSOR (moved inside Overview so it's visible) -->
+        <div id="sensors" class="panel table-panel" aria-labelledby="sensors-heading" style="margin-top:18px;">
+          <h3 id="sensors-heading" style="margin:0 0 12px 0; color:var(--accent-1)">Intelligent Inhaler — Sensors (Realtime)</h3>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+            <div class="card" style="min-width:180px;">
+              <div class="title">Humidity</div>
+              <div class="value" id="sensor_humidity">--</div>
+            </div>
+            <div class="card" style="min-width:180px;">
+              <div class="title">Flow Rate</div>
+              <div class="value" id="sensor_flow">--</div>
+            </div>
+            <div class="card" style="min-width:180px;">
+              <div class="title">Pressure (kPa)</div>
+              <div class="value" id="sensor_pressure">--</div>
+            </div>
+            <div class="card" style="min-width:180px;">
+              <div class="title">Prediction</div>
+              <div class="value" id="sensor_prediction">--</div>
+            </div>
+            <div class="card" style="min-width:100%; margin-top:0;">
+              <div class="title">Last Event</div>
+              <div id="sensor_last_event" style="color:var(--muted)"></div>
+            </div>
+          </div>
+        </div>
 
         <div class="charts-wrap">
           <div class="chart-card">
@@ -343,7 +341,6 @@
     const tbody = document.querySelector('#patientTable tbody');
     const allPatientsBody = document.querySelector('#allPatientsTable tbody');
     const alertsList = document.getElementById('alertsList');
-    const mainContent = document.getElementById('mainContent');
 
     // Modal elements
     const modalBackdrop = document.getElementById('modalBackdrop');
@@ -399,10 +396,7 @@
       const target = document.getElementById(s);
       if(!target) return;
       target.classList.add('active');
-      // smooth scroll the main content so the section is visible
-      // since main has its own scrollbar, scroll that container
       target.scrollIntoView({behavior:'smooth', block:'start'});
-      // add temporary highlight to draw attention
       target.classList.add('highlight');
       setTimeout(()=> target.classList.remove('highlight'), 1000);
     }));
@@ -413,7 +407,6 @@
 
     function applyTheme(name){ document.body.classList.remove('dark','light','medicos'); if(name==='light'){ document.body.classList.add('light'); } else if(name==='medicos'){ document.body.classList.add('medicos'); } else if(name==='dark'){ document.body.classList.add('dark'); } localStorage.setItem('dashboardTheme', name); }
 
-    // restore theme
     const savedTheme = localStorage.getItem('dashboardTheme') || 'default'; if(savedTheme!=='default') applyTheme(savedTheme);
     themeSelect.value = savedTheme==='default' ? 'default' : savedTheme;
 
@@ -424,7 +417,7 @@
     document.getElementById('refreshHz').addEventListener('change', ()=>{ clearInterval(window._demoInterval); startDemoInterval(); });
 
     // Export CSV
-    document.getElementById('exportCsv').addEventListener('click', ()=>{ const rows=[['Patient Name','Device ID','Usage','Last Updated','Status']]; patients.forEach(p=> rows.push([p.name,p.device,p.usage,humanTime(p.last),p.status])); const csv=rows.map(r=> r.map(c=> '"'+String(c).replace(/"/g,'""')+'"').join(',')).join(''); const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='patients_demo.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
+    document.getElementById('exportCsv').addEventListener('click', ()=>{ const rows=[['Patient Name','Device ID','Usage','Last Updated','Status']]; patients.forEach(p=> rows.push([p.name,p.device,p.usage,humanTime(p.last),p.status])); const csv=rows.map(r=> r.map(c=> '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='patients_demo.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
 
     // Quick message & help buttons
     document.getElementById('quickMsg').addEventListener('click', ()=> alert('Quick message (demo)'));
@@ -435,7 +428,99 @@
     function demoTick(){ const idx=Math.floor(Math.random()*patients.length); patients[idx].usage += Math.random()<0.5?1:0; patients[idx].last=new Date().toISOString(); if(Math.random()<0.03) patients[idx].status='sos'; if(Math.random()<0.06 && patients[idx].status==='normal') patients[idx].status='alert'; initialRender(); statusChart.data.datasets[0].data = [statusCounts().normal, statusCounts().alert, statusCounts().sos]; statusChart.update(); }
     function startDemoInterval(){ const hz = Number(document.getElementById('refreshHz').value) || 5; window._demoInterval = setInterval(demoTick, hz*1000); }
     startDemoInterval();
+  </script>
 
+  <!-- Firebase Realtime DB integration (module) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsgFV0eb6HYvKVOeb4H6AImr0Ydu2DqIU",
+      authDomain: "intelligent-inhaler.firebaseapp.com",
+      databaseURL: "https://intelligent-inhaler-default-rtdb.firebaseio.com",
+      projectId: "intelligent-inhaler",
+      storageBucket: "intelligent-inhaler.firebasestorage.app",
+      messagingSenderId: "1095006714138",
+      appId: "1:1095006714138:web:2227209523949b731c14a3",
+      measurementId: "G-0X5MF1G3RJ"
+    };
+
+    let app;
+    try {
+      app = initializeApp(firebaseConfig);
+    } catch (e) {
+      console.warn('Firebase initializeApp warning:', e && e.message ? e.message : e);
+    }
+
+    try { getAnalytics(app); } catch (err) { /* ignore */ }
+
+    const db = getDatabase(app);
+    const elHumidity = document.getElementById('sensor_humidity');
+    const elFlow = document.getElementById('sensor_flow');
+    const elPressure = document.getElementById('sensor_pressure');
+    const elPrediction = document.getElementById('sensor_prediction');
+    const elLastEvent = document.getElementById('sensor_last_event');
+
+    const sensorRef = ref(db, 'inhaler');
+
+    // Initial one-time fetch
+    get(sensorRef).then(snapshot => {
+      if (!snapshot.exists()) {
+        console.log('No sensor data at /inhaler (initial)');
+        return;
+      }
+      const data = snapshot.val();
+      console.log('Initial inhaler data (from Firebase):', data);
+      updateSensorUI(data);
+    }).catch(err => {
+      console.error('Error reading initial sensor data:', err);
+    });
+
+    // Realtime updates
+    onValue(sensorRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+      const d = snapshot.val();
+      console.log('Realtime inhaler update:', d);
+      updateSensorUI(d);
+      const lastUpdatedEl = document.getElementById('lastUpdated');
+      if (lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleString();
+    }, (err) => {
+      console.error('Realtime DB listener failed:', err);
+    });
+
+    function updateSensorUI(data){
+      const humidity = getValue(data, ['humidity', 'events/humidity', 'events/humidity.value']);
+      const flowRate = getValue(data, ['flowRate', 'events/flowRate', 'events/flow_rate', 'events/flow']);
+      const pressure = getValue(data, ['pressure_kPa', 'pressure', 'events/pressure_kPa']);
+      const prediction = getValue(data, ['prediction', 'events/prediction']);
+      const last_event = getValue(data, ['last_event', 'events/last_event', 'events/last', 'last']);
+
+      if (elHumidity) elHumidity.textContent = humidity !== undefined ? String(humidity) : '--';
+      if (elFlow) elFlow.textContent = flowRate !== undefined ? String(flowRate) : '--';
+      if (elPressure) elPressure.textContent = pressure !== undefined ? String(pressure) : '--';
+      if (elPrediction) elPrediction.textContent = prediction !== undefined ? String(prediction) : '--';
+      if (elLastEvent) elLastEvent.textContent = last_event !== undefined ? String(last_event) : '--';
+    }
+
+    function getValue(obj, paths){
+      for (const p of paths){
+        if (!obj) continue;
+        if (p.includes('/')){
+          const parts = p.split('/');
+          let cur = obj;
+          for (const k of parts){
+            if (cur && Object.prototype.hasOwnProperty.call(cur,k)) cur = cur[k];
+            else { cur = undefined; break; }
+          }
+          if (cur !== undefined) return cur;
+        } else {
+          if (Object.prototype.hasOwnProperty.call(obj, p)) return obj[p];
+        }
+      }
+      return undefined;
+    }
   </script>
 </body>
 </html>
