@@ -145,6 +145,27 @@
         </div>
       </div>
 
+      <!-- SPECIAL LIVE PATIENT CARD (Gajanan Rathod) -->
+      <div id="specialPatient" style="display:flex; gap:12px; margin-top:6px; margin-bottom:6px; align-items:stretch;">
+        <div class="card" style="flex:0 0 360px; background:linear-gradient(90deg,#e6fffb,#dffbf7); border:1px solid rgba(11,189,172,0.08);">
+          <div class="title">Monitored Patient</div>
+          <div style="font-weight:800; font-size:18px; margin-top:6px" id="sp_name">Gajanan Rathod</div>
+          <div style="color:var(--muted); font-size:13px;" id="sp_device">INH100</div>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <div style="flex:1">
+              <div class="title">Flow</div><div class="value" id="sp_flow">--</div>
+            </div>
+            <div style="flex:1">
+              <div class="title">Pressure</div><div class="value" id="sp_pressure">--</div>
+            </div>
+            <div style="flex:1">
+              <div class="title">Prediction</div><div class="value" id="sp_prediction">--</div>
+            </div>
+          </div>
+          <div style="margin-top:8px; color:var(--danger); font-weight:800;" id="sp_status">--</div>
+        </div>
+      </div>
+
       <!-- OVERVIEW -->
       <section id="overview" class="section active">
         <div class="cards" aria-hidden="false">
@@ -297,6 +318,10 @@
   </div>
 
   <script>
+    // --- CONFIG: which device is the monitored patient (match your ESP DEVICE_ID) ---
+    const MONITORED_DEVICE = 'INH100';
+    const MONITORED_PATIENT_NAME = 'Gajanan Rathod';
+
     // --- DEMO DATA (local only) ---
     function makeDemoPatients(){
       const names = ['John Doe','Sarah Lee','Ramesh Kumar','Asha Patel','Dev Sharma','Neha Rao','Karan Singh','Maya Iyer','Priya Nair','Arjun Mehta'];
@@ -335,12 +360,45 @@
 
     let patients = makeDemoPatients();
 
+    // Ensure Gajanan exists and is top of list
+    function ensureGajananInDemo(){
+      if (!patients.some(p => p.name.toLowerCase().includes('gajanan'))) {
+        const g = {
+          id:9999,
+          name: MONITORED_PATIENT_NAME,
+          device: MONITORED_DEVICE,
+          usage: 0,
+          last: new Date().toISOString(),
+          status: 'normal',
+          location: 'Unknown',
+          notes: 'Monitored patient (live)'
+        };
+        patients.unshift(g);
+      } else {
+        // If exists but not at top, move to top
+        const idx = patients.findIndex(p => p.device === MONITORED_DEVICE || (p.name && p.name.toLowerCase().includes('gajanan')));
+        if (idx > 0) {
+          const [g] = patients.splice(idx,1);
+          patients.unshift(g);
+        }
+      }
+    }
+    ensureGajananInDemo();
+
     // Elements
     const sections = document.querySelectorAll('.section');
     const navButtons = document.querySelectorAll('#mainNav button');
     const tbody = document.querySelector('#patientTable tbody');
     const allPatientsBody = document.querySelector('#allPatientsTable tbody');
     const alertsList = document.getElementById('alertsList');
+
+    // Special patient elements
+    const spNameEl = document.getElementById('sp_name');
+    const spDeviceEl = document.getElementById('sp_device');
+    const spFlowEl = document.getElementById('sp_flow');
+    const spPressureEl = document.getElementById('sp_pressure');
+    const spPredictionEl = document.getElementById('sp_prediction');
+    const spStatusEl = document.getElementById('sp_status');
 
     // Modal elements
     const modalBackdrop = document.getElementById('modalBackdrop');
@@ -352,21 +410,21 @@
     const msgBtn = document.getElementById('msgBtn');
 
     // Render functions
-    function humanTime(iso){ const d=new Date(iso); return d.toLocaleString(); }
+    function humanTime(iso){ try { const d=new Date(iso); if (isNaN(d)) return iso; return d.toLocaleString(); } catch(e){ return iso; } }
 
-    function renderOverviewTable(list){ tbody.innerHTML=''; list.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td style="font-weight:700; color:var(--text-dark)">${p.name}</td><td>${p.device}</td><td>${p.usage}x</td><td>${humanTime(p.last)}</td><td><span class="badge ${p.status}">${p.status.toUpperCase()}</span></td><td><button class="btn ghost viewBtn" data-id="${p.id}">View</button></td>`; tbody.appendChild(tr); }); attachViewButtons(); }
+    function renderOverviewTable(list){ tbody.innerHTML=''; list.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td style="font-weight:700; color:var(--text-dark)">${p.name}</td><td>${p.device}</td><td>${p.usage}x</td><td>${humanTime(p.last)}</td><td><span class="badge ${p.status}">${(p.status||'').toUpperCase()}</span></td><td><button class="btn ghost viewBtn" data-id="${p.id}">View</button></td>`; tbody.appendChild(tr); }); attachViewButtons(); }
 
-    function renderAllPatients(list){ allPatientsBody.innerHTML=''; list.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${p.device}</td><td>${p.usage}x</td><td>${humanTime(p.last)}</td><td>${p.location}</td><td><span class="badge ${p.status}">${p.status.toUpperCase()}</span></td>`; allPatientsBody.appendChild(tr); }); }
+    function renderAllPatients(list){ allPatientsBody.innerHTML=''; list.forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${p.device}</td><td>${p.usage}x</td><td>${humanTime(p.last)}</td><td>${p.location}</td><td><span class="badge ${p.status}">${(p.status||'').toUpperCase()}</span></td>`; allPatientsBody.appendChild(tr); }); }
 
-    function renderAlerts(list){ alertsList.innerHTML=''; const alerts = list.filter(p=>p.status!=='normal'); if(alerts.length===0){ alertsList.innerHTML='<div style="color:var(--muted)">No active alerts</div>'; return; } alerts.forEach(p=>{ const div=document.createElement('div'); div.style.padding='10px'; div.style.borderLeft='4px solid rgba(10,20,30,0.03)'; div.style.marginBottom='8px'; div.innerHTML=`<strong style="color:var(--text-dark)">${p.status.toUpperCase()}</strong> — ${p.name} (${p.device}) at ${p.location} — ${humanTime(p.last)}`; alertsList.appendChild(div); }); }
+    function renderAlerts(list){ alertsList.innerHTML=''; const alerts = list.filter(p=> (p.status && p.status.toLowerCase()!=='normal')); if(alerts.length===0){ alertsList.innerHTML='<div style="color:var(--muted)">No active alerts</div>'; return; } alerts.forEach(p=>{ const div=document.createElement('div'); div.style.padding='10px'; div.style.borderLeft='4px solid rgba(10,20,30,0.03)'; div.style.marginBottom='8px'; div.innerHTML=`<strong style="color:var(--text-dark)">${(p.status||'').toUpperCase()}</strong> — ${p.name} (${p.device}) at ${p.location} — ${humanTime(p.last)}`; alertsList.appendChild(div); }); }
 
-    function updateStats(){ document.getElementById('totalPatients').textContent = patients.length; document.getElementById('usesToday').textContent = patients.reduce((s,p)=>s+p.usage,0); document.getElementById('activeAlerts').textContent = patients.filter(p=>p.status!=='normal').length; document.getElementById('sos24').textContent = patients.filter(p=>p.status==='sos').length; }
+    function updateStats(){ document.getElementById('totalPatients').textContent = patients.length; document.getElementById('usesToday').textContent = patients.reduce((s,p)=>s+p.usage,0); document.getElementById('activeAlerts').textContent = patients.filter(p=>p.status && p.status.toLowerCase()!=='normal').length; document.getElementById('sos24').textContent = patients.filter(p=>p.status && p.status.toLowerCase()==='sos').length; }
 
     // Attach view buttons
     function attachViewButtons(){ document.querySelectorAll('.viewBtn').forEach(b=> b.addEventListener('click', ()=>{ const id=Number(b.dataset.id); openPatientModal(id); })); }
 
     // Modal logic
-    function openPatientModal(id){ const p = patients.find(x=>x.id===id); if(!p) return; modalTitle.textContent = p.name; modalMeta.textContent = `${p.device} — ${p.status.toUpperCase()} — Last: ${humanTime(p.last)} — Location: ${p.location}`; modalDesc.textContent = p.notes; modalBackdrop.classList.add('show'); modalBackdrop.setAttribute('aria-hidden','false'); // wire buttons
+    function openPatientModal(id){ const p = patients.find(x=>x.id===id); if(!p) return; modalTitle.textContent = p.name; modalMeta.textContent = `${p.device} — ${p.status && p.status.toUpperCase()} — Last: ${humanTime(p.last)} — Location: ${p.location}`; modalDesc.textContent = p.notes || 'No notes'; modalBackdrop.classList.add('show'); modalBackdrop.setAttribute('aria-hidden','false'); // wire buttons
       ackBtn.onclick = ()=>{ alert('Acknowledged alert for ' + p.name + ' (demo)'); modalBackdrop.classList.remove('show'); };
       msgBtn.onclick = ()=>{ alert('Message sent to ' + p.name + ' (demo)'); };
     }
@@ -376,30 +434,20 @@
     // Charts
     const usageChart = new Chart(document.getElementById('usageChart'), { type:'line', data:{ labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{label:'Avg uses', data:Array.from({length:7},()=>Math.floor(Math.random()*30)+5), borderWidth:2, tension:0.36, pointRadius:4, borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-1') || '#0bbdac', backgroundColor:'rgba(11,189,172,0.08)', fill:true }]}, options:{plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}}, y:{grid:{display:false}}}} });
 
-    const statusCounts = () => { const counts = {normal:0, alert:0, sos:0}; patients.forEach(p=> counts[p.status]++); return counts; };
+    const statusCounts = () => { const counts = {normal:0, alert:0, sos:0}; patients.forEach(p=> { const s = (p.status||'normal').toLowerCase(); if (s==='sos') counts.sos++; else if (s==='alert' || s==='wrong_inhalation' || s==='wrong_inhalation'.toLowerCase()) counts.alert++; else counts.normal++; }); return counts; };
     const sc = statusCounts();
     const statusChart = new Chart(document.getElementById('statusChart'), { type:'doughnut', data:{ labels:['Normal','Alert','SOS'], datasets:[{data:[sc.normal, sc.alert, sc.sos], backgroundColor:['#00c77a','#6574ff','#e64b4b']}]}, options:{plugins:{legend:{position:'bottom', labels:{color:getComputedStyle(document.documentElement).getPropertyValue('--muted') || '#4b5966'}}}}});
 
     const trendChart = new Chart(document.getElementById('trendChart'), { type:'bar', data:{ labels:['Week1','Week2','Week3','Week4'], datasets:[{label:'Avg inhaler uses', data:[120,150,140,170], backgroundColor:['#0bbdac','#6574ff','#0bbdac','#6574ff']}]}, options:{plugins:{legend:{display:false}}} });
 
     // Initial render
-    function initialRender(){ renderOverviewTable(patients); renderAllPatients(patients); renderAlerts(patients); updateStats(); const counts=statusCounts(); document.getElementById('countNormal').textContent=counts.normal; document.getElementById('countAlert').textContent=counts.alert; document.getElementById('countSOS').textContent=counts.sos; document.getElementById('lastUpdated').textContent=new Date().toLocaleString(); }
+    function initialRender(){ renderOverviewTable(patients); renderAllPatients(patients); renderAlerts(patients); updateStats(); const counts=statusCounts(); document.getElementById('countNormal').textContent=counts.normal; document.getElementById('countAlert').textContent=counts.alert; document.getElementById('countSOS').textContent=counts.sos; document.getElementById('lastUpdated').textContent=new Date().toLocaleString(); // initialize special card
+      spNameEl.textContent = MONITORED_PATIENT_NAME; spDeviceEl.textContent = MONITORED_DEVICE; spFlowEl.textContent = '--'; spPressureEl.textContent = '--'; spPredictionEl.textContent = '--'; spStatusEl.textContent = '--';
+    }
     initialRender();
 
     // Navigation + smooth scroll + highlight
-    navButtons.forEach(b=> b.addEventListener('click', ()=>{
-      navButtons.forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      const s = b.dataset.section;
-      if(!s) return;
-      sections.forEach(sec=> sec.classList.remove('active'));
-      const target = document.getElementById(s);
-      if(!target) return;
-      target.classList.add('active');
-      target.scrollIntoView({behavior:'smooth', block:'start'});
-      target.classList.add('highlight');
-      setTimeout(()=> target.classList.remove('highlight'), 1000);
-    }));
+    navButtons.forEach(b=> b.addEventListener('click', ()=>{ navButtons.forEach(x=>x.classList.remove('active')); b.classList.add('active'); const s = b.dataset.section; if(!s) return; sections.forEach(sec=> sec.classList.remove('active')); const target = document.getElementById(s); if(!target) return; target.classList.add('active'); target.scrollIntoView({behavior:'smooth', block:'start'}); target.classList.add('highlight'); setTimeout(()=> target.classList.remove('highlight'), 1000); }));
 
     // Theme handling
     const themeSelect = document.getElementById('themeSelect');
@@ -428,14 +476,17 @@
     function demoTick(){ const idx=Math.floor(Math.random()*patients.length); patients[idx].usage += Math.random()<0.5?1:0; patients[idx].last=new Date().toISOString(); if(Math.random()<0.03) patients[idx].status='sos'; if(Math.random()<0.06 && patients[idx].status==='normal') patients[idx].status='alert'; initialRender(); statusChart.data.datasets[0].data = [statusCounts().normal, statusCounts().alert, statusCounts().sos]; statusChart.update(); }
     function startDemoInterval(){ const hz = Number(document.getElementById('refreshHz').value) || 5; window._demoInterval = setInterval(demoTick, hz*1000); }
     startDemoInterval();
+
+    // ------------ FIREBASE Realtime DB integration (module) ------------
+    // keep these imports same as before; ensure firebase project config is filled
   </script>
 
-  <!-- Firebase Realtime DB integration (module) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
     import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
+    // --- your firebase config (fill apiKey if you want analytics) ---
     const firebaseConfig = {
       apiKey: "",
       authDomain: "intelligent-inhaler.firebaseapp.com",
@@ -447,42 +498,56 @@
       measurementId: "G-0X5MF1G3RJ"
     };
 
-    let app;
-    try {
-      app = initializeApp(firebaseConfig);
-    } catch (e) {
-      console.warn('Firebase initializeApp warning:', e && e.message ? e.message : e);
-    }
-
-    try { getAnalytics(app); } catch (err) { /* ignore */ }
-
+    const app = initializeApp(firebaseConfig);
+    try { getAnalytics(app); } catch(e){ /* analytics may not be enabled */ }
     const db = getDatabase(app);
+
+    // Reuse existing elements
     const elHumidity = document.getElementById('sensor_humidity');
     const elFlow = document.getElementById('sensor_flow');
     const elPressure = document.getElementById('sensor_pressure');
     const elPrediction = document.getElementById('sensor_prediction');
     const elLastEvent = document.getElementById('sensor_last_event');
 
+    // root inhaler path (keeps compatibility with previous device writes)
     const sensorRef = ref(db, 'inhaler');
 
-    // Initial one-time fetch
+    // Helper to format last_event objects into readable text
+    function formatLastEvent(ev) {
+      if (!ev) return '--';
+      if (typeof ev === 'string' || typeof ev === 'number') return String(ev);
+      // if object
+      const ts = ev.iso || ev.timestamp || ev.ts || ev.ts_epoch || ev.timestamp_ms || null;
+      const timeStr = ts ? (typeof ts === 'string' && ts.startsWith('ms:') ? 'uptime ' + ts : new Date(ts * (String(ts).length===10?1000:1)).toLocaleString()) : '';
+      // prefer readable fields
+      let parts = [];
+      if (ev.patient) parts.push(ev.patient);
+      if (ev.device) parts.push(ev.device);
+      if (ev.flow !== undefined) parts.push('Flow:' + Number(ev.flow).toFixed(2));
+      if (ev.pressure_kPa !== undefined) parts.push('Pres:' + Number(ev.pressure_kPa).toFixed(3));
+      if (ev.prediction !== undefined) parts.push('Pred:' + String(ev.prediction));
+      if (ev.alert !== undefined) parts.push('Alert:' + String(ev.alert));
+      if (timeStr) parts.push(timeStr);
+      if (parts.length) return parts.join(' • ');
+      // fallback to pretty JSON if nothing matched
+      try { return JSON.stringify(ev); } catch(e) { return String(ev); }
+    }
+
+    // update sensor UI from root /inhaler node (backwards compat)
     get(sensorRef).then(snapshot => {
       if (!snapshot.exists()) {
         console.log('No sensor data at /inhaler (initial)');
         return;
       }
       const data = snapshot.val();
-      console.log('Initial inhaler data (from Firebase):', data);
       updateSensorUI(data);
     }).catch(err => {
       console.error('Error reading initial sensor data:', err);
     });
 
-    // Realtime updates
     onValue(sensorRef, (snapshot) => {
       if (!snapshot.exists()) return;
       const d = snapshot.val();
-      console.log('Realtime inhaler update:', d);
       updateSensorUI(d);
       const lastUpdatedEl = document.getElementById('lastUpdated');
       if (lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleString();
@@ -501,7 +566,7 @@
       if (elFlow) elFlow.textContent = flowRate !== undefined ? String(flowRate) : '--';
       if (elPressure) elPressure.textContent = pressure !== undefined ? String(pressure) : '--';
       if (elPrediction) elPrediction.textContent = prediction !== undefined ? String(prediction) : '--';
-      if (elLastEvent) elLastEvent.textContent = last_event !== undefined ? String(last_event) : '--';
+      if (elLastEvent) elLastEvent.textContent = last_event !== undefined ? formatLastEvent(last_event) : '--';
     }
 
     function getValue(obj, paths){
@@ -521,6 +586,80 @@
       }
       return undefined;
     }
+
+    // ---- NEW: Listen for per-patient updates under /patients and merge live data ----
+    const patientsRef = ref(db, 'patients');
+
+    // Map of device -> patient data
+    const patientsByDevice = {};
+
+    onValue(patientsRef, (snap) => {
+      if (!snap.exists()) {
+        console.log('No /patients data yet');
+        return;
+      }
+      const data = snap.val();
+      console.log('Realtime /patients update:', data);
+
+      // Merge/insert device-level entries into the demo `patients` array
+      Object.keys(data).forEach(deviceId => {
+        const pNode = data[deviceId] || {};
+
+        // find existing demo patient by device id
+        let existing = patients.find(x => x.device === deviceId);
+        if (!existing) {
+          // create new patient entry and add to top
+          existing = {
+            id: patients.length + 1000,
+            name: pNode.name || (`Patient ${deviceId}`),
+            device: deviceId,
+            usage: pNode.usage || 0,
+            last: (pNode.last_event && (pNode.last_event.iso || pNode.last_event.timestamp)) ? (pNode.last_event.iso || pNode.last_event.timestamp) : (new Date().toISOString()),
+            status: (pNode.status || 'normal').toLowerCase(),
+            location: pNode.location || 'Unknown',
+            notes: (pNode.last_event && pNode.last_event.note) ? pNode.last_event.note : (pNode.notes || '')
+          };
+          // add to top
+          patients.unshift(existing);
+        } else {
+          // update fields from pNode
+          if (pNode.name) existing.name = pNode.name;
+          if (pNode.status) existing.status = pNode.status.toLowerCase();
+          if (pNode.last_event && (pNode.last_event.iso || pNode.last_event.timestamp)) existing.last = pNode.last_event.iso || pNode.last_event.timestamp;
+          if (pNode.usage !== undefined) existing.usage = pNode.usage;
+        }
+
+        // store raw node
+        patientsByDevice[deviceId] = Object.assign({}, pNode, { device: deviceId });
+      });
+
+      // Re-render lists and stats
+      // Make sure monitored device is shown at top
+      patients.sort((a,b) => (a.device === MONITORED_DEVICE ? -1 : 0) - (b.device === MONITORED_DEVICE ? -1 : 0) );
+      renderOverviewTable(patients);
+      renderAllPatients(patients);
+      renderAlerts(patients);
+      updateStats();
+
+      // Update special monitored patient card if present in patientsByDevice
+      const m = patientsByDevice[MONITORED_DEVICE];
+      if (m) {
+        spNameEl.textContent = m.name || MONITORED_PATIENT_NAME;
+        spDeviceEl.textContent = MONITORED_DEVICE;
+        spFlowEl.textContent = m.flowRate !== undefined ? String(m.flowRate) : (m.flow !== undefined ? String(m.flow) : '--');
+        spPressureEl.textContent = m.pressure_kPa !== undefined ? String(m.pressure_kPa) : (m.pressure !== undefined ? String(m.pressure) : '--');
+        spPredictionEl.textContent = m.prediction !== undefined ? String(m.prediction) : '--';
+        let statusString = (m.status || '').toUpperCase();
+        // If last_event.alert is true, show WRONG_INHALATION
+        if (m.last_event && (m.last_event.alert === true || m.last_event.alert === 'true')) {
+          statusString = 'WRONG_INHALATION';
+        }
+        spStatusEl.textContent = statusString || '--';
+      }
+    }, (err) => {
+      console.error('patients onValue error', err);
+    });
+
   </script>
 </body>
 </html>
