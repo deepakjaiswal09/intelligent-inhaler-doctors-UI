@@ -362,7 +362,7 @@
 
     // Ensure Gajanan exists and is top of list
     function ensureGajananInDemo(){
-      if (!patients.some(p => p.name.toLowerCase().includes('gajanan'))) {
+      if (!patients.some(p => p.name.toLowerCase().includes('Om'))) {
         const g = {
           id:9999,
           name: MONITORED_PATIENT_NAME,
@@ -376,7 +376,7 @@
         patients.unshift(g);
       } else {
         // If exists but not at top, move to top
-        const idx = patients.findIndex(p => p.device === MONITORED_DEVICE || (p.name && p.name.toLowerCase().includes('gajanan')));
+        const idx = patients.findIndex(p => p.device === MONITORED_DEVICE || (p.name && p.name.toLowerCase().includes('Om')));
         if (idx > 0) {
           const [g] = patients.splice(idx,1);
           patients.unshift(g);
